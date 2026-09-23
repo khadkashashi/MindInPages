@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions
 from .models import Workspace, WorkspaceMember
 from .serializers import WorkspaceSerializer
+from subscriptions.models import Plan, Subscription
 
 class WorkspaceViewSet(viewsets.ModelViewSet):
     serializer_class = WorkspaceSerializer
@@ -17,3 +18,5 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             role=WorkspaceMember.Role.OWNER,
         )
+        free_plan, _ = Plan.objects.get_or_create(name=Plan.Tier.FREE,defaults={"max_members": 3, "max_notes": 50, "price_per_month": 0})
+        Subscription.objects.create(workspace=workspace, plan=free_plan)
