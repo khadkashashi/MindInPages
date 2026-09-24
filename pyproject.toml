@@ -8,9 +8,12 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "celery>=5.6.3",
     "django>=6.1.1",
+    "django-celery-beat>=2.1.0",
     "djangorestframework>=3.18.1",
     "djangorestframework-simplejwt>=5.5.1",
+    "redis>=8.1.0",
     "requests>=2.34.2",
 ]
 

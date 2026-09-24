@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'accounts',
     'workspaces',
     'subscriptions',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -123,6 +124,12 @@ USE_I18N = True
 
 USE_TZ = True
 
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
