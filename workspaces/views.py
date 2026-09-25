@@ -7,7 +7,8 @@ from .serializers import WorkspaceSerializer, WorkspaceMemberSerializer
 from .permissions import IsWorkspaceOwnerOrAdmin, IsWorkspaceOwner
 from subscriptions.models import Plan, Subscription
 from django.core.cache import cache
-
+from analytics.services import log_activity
+from analytics.models import Activity
 
 User = get_user_model()
 class WorkspaceViewSet(viewsets.ModelViewSet):
@@ -47,10 +48,11 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         if not created:
             return Response({"detail": "User already a member."}, status=status.HTTP_400_BAD_REQUEST)
 
-        cache.delete(f"workspace_stats_{workspace.id}")  # invalidate stale stats
+        cache.delete(f"workspace_stats_{workspace.id}")
+        log_activity(workspace, request.user, Activity.Action.MEMBER_INVITED, {"invited_email": email, "role": role})
 
         return Response(WorkspaceMemberSerializer(member).data, status=status.HTTP_201_CREATED)
-    
+        
     @action(detail=True, methods=["get"])
     def stats(self, request, pk=None):
         workspace = self.get_object()

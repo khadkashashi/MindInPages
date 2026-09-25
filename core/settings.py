@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'workspaces',
     'subscriptions',
     'django_celery_beat',
+    'analytics',
 ]
 
 MIDDLEWARE = [
