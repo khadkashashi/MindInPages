@@ -8,4 +8,6 @@ urlpatterns = [
     path("api/v1/subscriptions/", include("subscriptions.urls")),
     path("api/v1/activities/", include("analytics.urls")),
     path("api/v1/notes/", include("notes.urls")),
+    path("api/v1/folders/", include("folders.urls")),
+    path("api/v1/tags/", include("tags.urls")),
 ]

@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'analytics',
     'notes',
+    'folders',
+    'tags',
 ]
 
 MIDDLEWARE = [
