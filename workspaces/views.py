@@ -9,6 +9,8 @@ from subscriptions.models import Plan, Subscription
 from django.core.cache import cache
 from analytics.services import log_activity
 from analytics.models import Activity
+from notifications.services import notify
+from notifications.models import Notification
 
 User = get_user_model()
 class WorkspaceViewSet(viewsets.ModelViewSet):
@@ -47,6 +49,7 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         member, created = WorkspaceMember.objects.get_or_create(workspace=workspace, user=user, defaults={"role": role})
         if not created:
             return Response({"detail": "User already a member."}, status=status.HTTP_400_BAD_REQUEST)
+        notify(workspace, user,f"You were added to {workspace.name} as {role}.",type=Notification.Type.MEMBER_INVITED)
 
         cache.delete(f"workspace_stats_{workspace.id}")
         log_activity(workspace, request.user, Activity.Action.MEMBER_INVITED, {"invited_email": email, "role": role})

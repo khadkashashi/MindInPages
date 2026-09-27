@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'tasks',
     'goals',
     'reminders',
+    'notifications',
 ]
 
 MIDDLEWARE = [
