@@ -10,4 +10,5 @@ urlpatterns = [
     path("api/v1/notes/", include("notes.urls")),
     path("api/v1/folders/", include("folders.urls")),
     path("api/v1/tags/", include("tags.urls")),
+    path("api/v1/tasks/", include("tasks.urls")),
 ]

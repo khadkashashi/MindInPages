@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'notes',
     'folders',
     'tags',
+    'tasks',
 ]
 
 MIDDLEWARE = [

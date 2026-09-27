@@ -9,6 +9,7 @@ class Activity(models.Model):
         MEMBER_INVITED = "MEMBER_INVITED", "Member Invited"
         EDITING="EDITING", "editing"
         NOTE_CREATED = "NOTE_CREATED", "Note Created"
+        TASK_CREATED = "TASK_CREATED", "Task Created"
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name="activities")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="activities")
     action = models.CharField(max_length=50, choices=Action.choices)
