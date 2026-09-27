@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     'tags',
     'tasks',
     'goals',
+    'reminders',
 ]
 
 MIDDLEWARE = [
@@ -189,4 +191,11 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": config("REDIS_URL") + "/1",
     }
+}
+
+CELERY_BEAT_SCHEDULE = {
+    "check-due-reminders": {
+        "task": "reminders.tasks.send_due_reminders",
+        "schedule": crontab(minute="*"),  # runs every minute
+    },
 }
