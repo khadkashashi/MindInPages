@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'folders',
     'tags',
     'tasks',
+    'goals',
 ]
 
 MIDDLEWARE = [

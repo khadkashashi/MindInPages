@@ -11,4 +11,5 @@ urlpatterns = [
     path("api/v1/folders/", include("folders.urls")),
     path("api/v1/tags/", include("tags.urls")),
     path("api/v1/tasks/", include("tasks.urls")),
+    path("api/v1/goals/", include("goals.urls")),
 ]
