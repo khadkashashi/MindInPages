@@ -14,4 +14,5 @@ urlpatterns = [
     path("api/v1/goals/", include("goals.urls")),
     path("api/v1/reminders/", include("reminders.urls")),
     path("api/v1/notifications/", include("notifications.urls")),
+    path("api/v1/search/", include("search.urls")),
 ]

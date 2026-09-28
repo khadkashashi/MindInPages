@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django.contrib.postgres',
     'accounts',
     'workspaces',
     'subscriptions',
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     'goals',
     'reminders',
     'notifications',
+    'search',
 ]
 
 MIDDLEWARE = [

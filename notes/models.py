@@ -3,6 +3,8 @@ from django.db import models
 from workspaces.models import Workspace
 from folders.models import Folder
 from tags.models import Tag
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.search import SearchVector
 
 class Note(models.Model):
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name="notes")
@@ -17,7 +19,9 @@ class Note(models.Model):
 
     def __str__(self):
         return self.title
-
+    class Meta:
+        indexes = [GinIndex(SearchVector("title", "content", config="english"),name="note_search_idx")]
+#GIN = Generalized Inverted Index--->PostgreSQL लाई text search छिटो गर्न बनाइएको special index हो।
 
 class NoteVersion(models.Model):
     note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name="versions")
