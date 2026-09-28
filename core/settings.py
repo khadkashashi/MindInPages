@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'reminders',
     'notifications',
     'search',
+    'flashcards',
 ]
 
 MIDDLEWARE = [
