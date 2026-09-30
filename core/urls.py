@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/v1/search/", include("search.urls")),
     path("api/v1/flashcards/", include("flashcards.urls")),
     path("api/v1/attachments/", include("attachments.urls")),
+    path("api/v1/study/", include("study.urls")),
 ]
 
 # Append static media serving in development

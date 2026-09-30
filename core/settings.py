@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'search',
     'flashcards',
     'attachments',
+    'study',
 ]
 
 MIDDLEWARE = [
