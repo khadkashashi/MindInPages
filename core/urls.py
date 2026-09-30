@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,4 +18,9 @@ urlpatterns = [
     path("api/v1/notifications/", include("notifications.urls")),
     path("api/v1/search/", include("search.urls")),
     path("api/v1/flashcards/", include("flashcards.urls")),
+    path("api/v1/attachments/", include("attachments.urls")),
 ]
+
+# Append static media serving in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
