@@ -10,3 +10,5 @@ wheels/
 .venv
 .env
 media/
+frontend/node_modules/
+frontend/dist/
