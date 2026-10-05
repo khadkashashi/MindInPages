@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { WorkspaceProvider } from "./context/WorkspaceContext";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
-import Register from "./pages/Register.tsx";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -20,7 +21,9 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <WorkspaceProvider>
+              <Dashboard />
+            </WorkspaceProvider>
           </ProtectedRoute>
         }
       />

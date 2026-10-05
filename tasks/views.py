@@ -13,19 +13,18 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Task.objects.filter(workspace__members__user=self.request.user)
-
+        workspace_id = self.request.query_params.get("workspace")
+        if workspace_id:
+            qs = qs.filter(workspace_id=workspace_id)
         status_param = self.request.query_params.get("status")
         if status_param:
             qs = qs.filter(status=status_param)
-
         priority_param = self.request.query_params.get("priority")
         if priority_param:
             qs = qs.filter(priority=priority_param)
-
         overdue = self.request.query_params.get("overdue")
         if overdue == "true":
             qs = qs.filter(due_date__lt=timezone.now()).exclude(status=Task.Status.DONE)
-
         return qs
 
     def perform_create(self, serializer):
