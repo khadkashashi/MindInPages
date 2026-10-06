@@ -5,6 +5,8 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Notes from "./pages/Notes";
+import NoteDetail from "./pages/NoteDetail";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -23,6 +25,26 @@ function AppRoutes() {
           <ProtectedRoute>
             <WorkspaceProvider>
               <Dashboard />
+            </WorkspaceProvider>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notes"
+        element={
+          <ProtectedRoute>
+            <WorkspaceProvider>
+              <Notes />
+            </WorkspaceProvider>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notes/:id"
+        element={
+          <ProtectedRoute>
+            <WorkspaceProvider>
+              <NoteDetail />
             </WorkspaceProvider>
           </ProtectedRoute>
         }
