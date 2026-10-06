@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Notes from "./pages/Notes";
 import NoteDetail from "./pages/NoteDetail";
+import Tasks from "./pages/Tasks";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -50,7 +51,18 @@ function AppRoutes() {
         }
       />
       <Route path="*" element={<Navigate to="/" />} />
+            <Route
+        path="/tasks"
+        element={
+          <ProtectedRoute>
+            <WorkspaceProvider>
+              <Tasks />
+            </WorkspaceProvider>
+          </ProtectedRoute>
+        }
+      />
     </Routes>
+    
   );
 }
 
