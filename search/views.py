@@ -3,6 +3,8 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from notes.models import Note
+from notes.access import visible_notes
+from notes.models import Note
 #SearchQuery-->User ले search गरेको कुरा PostgreSQL search query मा convert गर्छ।
 #SearchVector-->Search कुन fields मा गर्ने?
 #SearchRank-->यसले प्रत्येक result लाई relevance score दिन्छ।
@@ -10,7 +12,6 @@ from notes.models import Note
 
 class SearchView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-
     def get(self, request):
         q = request.query_params.get("q", "").strip()
         if not q:
@@ -18,24 +19,13 @@ class SearchView(APIView):
 
         query = SearchQuery(q, config="english")
         vector = SearchVector("title", "content", config="english")
-
         # isolation: only notes from workspaces this user belongs to
-        qs = Note.objects.filter(workspace__members__user=request.user, is_deleted=False)
-
+        qs = visible_notes(request.user)
         workspace_id = request.query_params.get("workspace")
         if workspace_id:
             qs = qs.filter(workspace_id=workspace_id)
 
-        results = (
-            qs.annotate(
-                search=vector,
-                rank=SearchRank(vector, query),
-                snippet=SearchHeadline("content", query, config="english",start_sel="<b>", stop_sel="</b>"),
-            )
-            .filter(search=query)
-            .order_by("-rank")[:20]
-        )
-
+        results = (qs.annotate(search=vector,rank=SearchRank(vector, query),snippet=SearchHeadline("content", query, config="english",start_sel="<b>", stop_sel="</b>")).filter(search=query).order_by("-rank")[:20])
         data = [
             {
                 "id": n.id,

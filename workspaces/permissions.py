@@ -1,6 +1,19 @@
 from rest_framework import permissions
 from .models import WorkspaceMember
+from rest_framework import permissions
+from .models import WorkspaceMember
 
+
+WRITE_ROLES = {
+    WorkspaceMember.Role.OWNER,
+    WorkspaceMember.Role.ADMIN,
+    WorkspaceMember.Role.EDITOR,
+}
+
+
+def get_role(user, workspace):
+    member = WorkspaceMember.objects.filter(workspace=workspace,user=user).first()
+    return member.role if member else None
 
 class IsWorkspaceMember(permissions.BasePermission):
     """Any role can view; only members of the workspace get in at all."""

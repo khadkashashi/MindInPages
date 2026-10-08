@@ -6,6 +6,7 @@ interface WorkspaceContextType {
   currentWorkspace: Workspace | null;
   setCurrentWorkspace: (w: Workspace) => void;
   loading: boolean;
+  canEdit: boolean;
   refresh: () => void;
 }
 
@@ -29,10 +30,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refresh();
   }, []);
+  const canEdit =
+    currentWorkspace?.role === "OWNER" ||
+    currentWorkspace?.role === "ADMIN" ||
+    currentWorkspace?.role === "EDITOR";
+
+
 
   return (
     <WorkspaceContext.Provider
-      value={{ workspaces, currentWorkspace, setCurrentWorkspace, loading, refresh }}
+      value={{ workspaces, currentWorkspace, setCurrentWorkspace, loading, refresh,canEdit }}
     >
       {children}
     </WorkspaceContext.Provider>
