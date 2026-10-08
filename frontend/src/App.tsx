@@ -8,6 +8,9 @@ import Dashboard from "./pages/Dashboard";
 import Notes from "./pages/Notes";
 import NoteDetail from "./pages/NoteDetail";
 import Tasks from "./pages/Tasks";
+import Flashcards from "./pages/Flashcards";
+import DeckDetail from "./pages/DeckDetail";
+import Study from "./pages/Study";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -57,6 +60,36 @@ function AppRoutes() {
           <ProtectedRoute>
             <WorkspaceProvider>
               <Tasks />
+            </WorkspaceProvider>
+          </ProtectedRoute>
+        }
+      />
+            <Route
+        path="/flashcards"
+        element={
+          <ProtectedRoute>
+            <WorkspaceProvider>
+              <Flashcards />
+            </WorkspaceProvider>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/flashcards/:deckId"
+        element={
+          <ProtectedRoute>
+            <WorkspaceProvider>
+              <DeckDetail />
+            </WorkspaceProvider>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/flashcards/:deckId/study"
+        element={
+          <ProtectedRoute>
+            <WorkspaceProvider>
+              <Study />
             </WorkspaceProvider>
           </ProtectedRoute>
         }

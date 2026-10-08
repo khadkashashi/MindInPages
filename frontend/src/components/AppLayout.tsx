@@ -7,6 +7,7 @@ const navItems = [
   { label: "Dashboard", path: "/dashboard" },
   { label: "Notes", path: "/notes" },
   { label: "Tasks", path: "/tasks" },
+  { label: "Flashcards", path: "/flashcards" },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {

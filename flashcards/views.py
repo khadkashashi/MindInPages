@@ -15,7 +15,11 @@ class DeckViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Deck.objects.filter(workspace__members__user=self.request.user)
+        qs = Deck.objects.filter(workspace__members__user=self.request.user)
+        workspace_id = self.request.query_params.get("workspace")
+        if workspace_id:
+            qs = qs.filter(workspace_id=workspace_id)
+        return qs
 
     def perform_create(self, serializer):
         workspace = get_object_or_404(Workspace, id=self.request.data.get("workspace"), members__user=self.request.user)
