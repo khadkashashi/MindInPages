@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  getNote, updateNote, deleteNote, getNoteHistory, restoreNoteVersion,type Note,type NoteVersion, type Visibility} from "../api/notes";
+  getNote,
+  updateNote,
+  deleteNote,
+  getNoteHistory,
+  restoreNoteVersion,
+  type Note,
+  type NoteVersion,
+  type Visibility,
+} from "../api/notes";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { canEditRole } from "../utils/roles.ts";
 import AppLayout from "../components/AppLayout";
@@ -38,8 +46,13 @@ export default function NoteDetail() {
     setSaving(true);
     setError("");
     try {
-      const payload: { title: string; content: string; visibility?: Visibility } = { title, content };
-      if (note.is_author && visibility !== note.visibility) payload.visibility = visibility;
+      const payload: {
+        title: string;
+        content: string;
+        visibility?: Visibility;
+      } = { title, content };
+      if (note.is_author && visibility !== note.visibility)
+        payload.visibility = visibility;
       const res = await updateNote(Number(id), payload);
       load(res.data);
     } catch (err: any) {
@@ -73,7 +86,9 @@ export default function NoteDetail() {
       load(res.data);
       setShowHistory(false);
     } catch (err: any) {
-      setError(err?.response?.data?.detail ?? "Could not restore this version.");
+      setError(
+        err?.response?.data?.detail ?? "Could not restore this version.",
+      );
     }
   };
 
@@ -86,20 +101,26 @@ export default function NoteDetail() {
   }
 
   const readOnly = !note.can_edit;
-  const canShare = canEditRole(workspaces.find((w) => w.id === note.workspace)?.role);
+  const canShare = canEditRole(
+    workspaces.find((w) => w.id === note.workspace)?.role,
+  );
   return (
     <AppLayout>
       <div className="max-w-3xl mx-auto">
         <div className="flex flex-wrap items-center gap-3 mb-3 text-sm">
           <span
             className={`px-3 py-1 rounded-full font-medium ${
-              note.visibility === "SHARED" ? "bg-green-100 text-green-700" : "bg-[#ece4d4] text-[#6b5f50]"
+              note.visibility === "SHARED"
+                ? "bg-green-100 text-green-700"
+                : "bg-[#ece4d4] text-[#6b5f50]"
             }`}
           >
             {note.visibility === "SHARED" ? "Shared" : "Private"}
           </span>
           {!note.is_author && note.author_email && (
-            <span className="text-[#9c8a6f]">Shared by {note.author_email}</span>
+            <span className="text-[#9c8a6f]">
+              Shared by {note.author_email}
+            </span>
           )}
           {note.is_author && (
             <select
@@ -108,9 +129,15 @@ export default function NoteDetail() {
               className="rounded-full border border-[#e3dbcb] bg-white px-3 py-1 text-sm text-[#3d342a]"
             >
               <option value="PRIVATE">Private (only me)</option>
-              {(canShare || note.visibility === "SHARED") && (
-                <option value="SHARED">Shared with workspace</option>
-              )}
+              <option
+                value="SHARED"
+                disabled={!canShare && note.visibility !== "SHARED"}
+              >
+                Shared with workspace
+                {!canShare && note.visibility !== "SHARED"
+                  ? " (your role can't share)"
+                  : ""}
+              </option>
             </select>
           )}
         </div>
@@ -159,7 +186,9 @@ export default function NoteDetail() {
 
         {showHistory && (
           <div className="mt-8 bg-white/70 border border-[#e3dbcb] rounded-2xl p-6">
-            <h3 className="font-semibold text-[#3d342a] mb-4">Version History</h3>
+            <h3 className="font-semibold text-[#3d342a] mb-4">
+              Version History
+            </h3>
             {history.length === 0 ? (
               <p className="text-sm text-[#9c8a6f]">No earlier versions yet.</p>
             ) : (
@@ -171,7 +200,9 @@ export default function NoteDetail() {
                   >
                     <div>
                       <p className="font-medium text-[#3d342a]">{v.title}</p>
-                      <p className="text-xs text-[#9c8a6f]">{new Date(v.created_at).toLocaleString()}</p>
+                      <p className="text-xs text-[#9c8a6f]">
+                        {new Date(v.created_at).toLocaleString()}
+                      </p>
                     </div>
                     {!readOnly && (
                       <button

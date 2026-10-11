@@ -1,19 +1,28 @@
-import type { ReactNode } from "react";
+import {type ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useWorkspace } from "../context/WorkspaceContext";
+import { getMe } from "../api/auth";
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard" },
   { label: "Notes", path: "/notes" },
   { label: "Tasks", path: "/tasks" },
   { label: "Flashcards", path: "/flashcards" },
+  { label: "Members", path: "/members" },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { logout } = useAuth();
   const { currentWorkspace } = useWorkspace();
   const location = useLocation();
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    getMe()
+      .then((res) => setEmail(res.data.email))
+      .catch(() => setEmail(""));
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f5f1ea]" style={{ fontFamily: "Inter, sans-serif" }}>
@@ -32,7 +41,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   key={item.path}
                   to={item.path}
                   className={
-                    location.pathname === item.path
+                    location.pathname.startsWith(item.path)
                       ? "text-[#3d342a]"
                       : "text-[#9c8a6f] hover:text-[#3d342a]"
                   }
@@ -43,9 +52,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            {currentWorkspace && (
-              <span className="text-sm text-[#6b5f50]">{currentWorkspace.name}</span>
-            )}
+            <div className="text-right leading-tight">
+              <p className="text-xs text-[#6b5f50]">{email}</p>
+              {currentWorkspace && (
+                <p className="text-xs text-[#9c8a6f]">
+                  {currentWorkspace.name} ·{" "}
+                  <span className="font-semibold text-[#3d342a]">
+                    {currentWorkspace.role ?? "unknown role"}
+                  </span>
+                </p>
+              )}
+            </div>
             <button
               onClick={logout}
               className="text-sm font-medium text-[#6b5f50] hover:text-[#3d342a]"

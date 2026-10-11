@@ -14,10 +14,10 @@ class Workspace(models.Model):
 
 class WorkspaceMember(models.Model):
     class Role(models.TextChoices):
-        OWNER =  "Owner"
-        ADMIN =  "Admin"
-        EDITOR =  "Editor"
-        VIEWER =  "Viewer"
+        OWNER = "OWNER", "Owner"
+        ADMIN = "ADMIN", "Admin"
+        EDITOR = "EDITOR", "Editor"
+        VIEWER = "VIEWER", "Viewer"
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name="members")
     user = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name="workspace_memberships")
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.VIEWER)
