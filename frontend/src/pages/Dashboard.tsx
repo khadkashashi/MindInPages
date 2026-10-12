@@ -6,16 +6,25 @@ import { createWorkspace } from "../api/workspaces";
 import AppLayout from "../components/AppLayout";
 
 export default function Dashboard() {
-  const { workspaces, currentWorkspace, setCurrentWorkspace, loading, refresh } =
-    useWorkspace();
+  const {
+    workspaces,
+    currentWorkspace,
+    setCurrentWorkspace,
+    loading,
+    refresh,
+  } = useWorkspace();
   const [notes, setNotes] = useState<Note[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
 
   useEffect(() => {
     if (!currentWorkspace) return;
-    listNotes(currentWorkspace.id).then((res) => setNotes(res.data.slice(0, 5)));
-    listTasks(currentWorkspace.id).then((res) => setTasks(res.data.slice(0, 5)));
+    listNotes(currentWorkspace.id).then((res) =>
+      setNotes(res.data.slice(0, 5)),
+    );
+    listTasks(currentWorkspace.id).then((res) =>
+      setTasks(res.data.slice(0, 5)),
+    );
   }, [currentWorkspace]);
 
   const handleCreateWorkspace = async () => {
@@ -48,7 +57,7 @@ export default function Dashboard() {
             }`}
           >
             {w.name}
-            <span className="ml-2 text-xs opacity-70">{w.role}</span>
+            <span className="ml-2 text-xs opacity-70">{w.my_role}</span>
           </button>
         ))}
         <div className="flex items-center gap-2">
@@ -68,7 +77,9 @@ export default function Dashboard() {
       </div>
 
       {!currentWorkspace ? (
-        <p className="text-[#6b5f50]">Create a workspace above to get started.</p>
+        <p className="text-[#6b5f50]">
+          Create a workspace above to get started.
+        </p>
       ) : (
         <div className="grid md:grid-cols-2 gap-8">
           {/* Recent Notes */}
@@ -84,9 +95,14 @@ export default function Dashboard() {
             ) : (
               <ul className="space-y-3">
                 {notes.map((n) => (
-                  <li key={n.id} className="border-b border-[#e3dbcb] pb-3 last:border-0">
+                  <li
+                    key={n.id}
+                    className="border-b border-[#e3dbcb] pb-3 last:border-0"
+                  >
                     <p className="font-medium text-[#3d342a]">{n.title}</p>
-                    <p className="text-sm text-[#6b5f50] truncate">{n.content}</p>
+                    <p className="text-sm text-[#6b5f50] truncate">
+                      {n.content}
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -110,14 +126,16 @@ export default function Dashboard() {
                     key={t.id}
                     className="flex items-center justify-between border-b border-[#e3dbcb] pb-3 last:border-0"
                   >
-                    <span className="font-medium text-[#3d342a]">{t.title}</span>
+                    <span className="font-medium text-[#3d342a]">
+                      {t.title}
+                    </span>
                     <span
                       className={`text-xs px-2 py-1 rounded-full font-medium ${
                         t.status === "DONE"
                           ? "bg-green-100 text-green-700"
                           : t.status === "IN_PROGRESS"
-                          ? "bg-amber-100 text-amber-700"
-                          : "bg-[#ece4d4] text-[#6b5f50]"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-[#ece4d4] text-[#6b5f50]"
                       }`}
                     >
                       {t.status.replace("_", " ")}

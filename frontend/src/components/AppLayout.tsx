@@ -1,4 +1,4 @@
-import {type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useWorkspace } from "../context/WorkspaceContext";
@@ -25,7 +25,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f5f1ea]" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div
+      className="min-h-screen bg-[#f5f1ea]"
+      style={{ fontFamily: "Inter, sans-serif" }}
+    >
       <header className="border-b border-[#e3dbcb] bg-white/60">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-8">
@@ -58,7 +61,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <p className="text-xs text-[#9c8a6f]">
                   {currentWorkspace.name} ·{" "}
                   <span className="font-semibold text-[#3d342a]">
-                    {currentWorkspace.role ?? "unknown role"}
+                    {currentWorkspace.my_role ?? "unknown role"}{" "}
                   </span>
                 </p>
               )}

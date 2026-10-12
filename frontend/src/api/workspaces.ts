@@ -8,6 +8,7 @@ export interface Workspace {
   owner: number;
   role: WorkspaceRole;
   created_at: string;
+  my_role?: string;
 }
 
 export const listWorkspaces = () =>
