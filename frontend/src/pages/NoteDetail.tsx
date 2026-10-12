@@ -101,8 +101,9 @@ export default function NoteDetail() {
   }
 
   const readOnly = !note.can_edit;
-  const canShare = canEditRole(
-    workspaces.find((w) => w.id === note.workspace)?.role,
+  const workspace = workspaces.find((w) => w.id === note.workspace);
+  const canShare = ["OWNER", "ADMIN", "EDITOR"].includes(
+    workspace?.my_role ?? "",
   );
   return (
     <AppLayout>
