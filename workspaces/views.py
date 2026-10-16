@@ -11,6 +11,7 @@ from analytics.services import log_activity
 from analytics.models import Activity
 from notifications.services import notify
 from notifications.models import Notification
+from .services import create_workspace
 
 User = get_user_model()
 class WorkspaceViewSet(viewsets.ModelViewSet):
@@ -21,23 +22,16 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         return Workspace.objects.filter(members__user=self.request.user)
 
     def perform_create(self, serializer):
-        workspace = serializer.save(owner=self.request.user)
-        WorkspaceMember.objects.create(workspace=workspace, user=self.request.user, role=WorkspaceMember.Role.OWNER)
-        free_plan, _ = Plan.objects.get_or_create(name=Plan.Tier.FREE,defaults={"max_members": 3, "max_notes": 50, "price_per_month": 0})
-        Subscription.objects.create(workspace=workspace, plan=free_plan)
-
+        workspace = create_workspace(self.request.user, serializer.validated_data["name"])
+        serializer.instance = workspace  
+        
     @action(detail=True, methods=["post"])
     def invite_member(self, request, pk=None):
         workspace = self.get_object()
-
-        # enforce plan limit
         subscription = workspace.subscription
         current_count = workspace.members.count()
         if current_count >= subscription.plan.max_members:
-            return Response(
-                {"detail": f"Member limit ({subscription.plan.max_members}) reached for {subscription.plan.name} plan."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            return Response({"detail": f"Member limit ({subscription.plan.max_members}) reached for {subscription.plan.name} plan."},status=status.HTTP_403_FORBIDDEN)
 
         email = request.data.get("email")
         role = request.data.get("role", WorkspaceMember.Role.VIEWER)
@@ -50,10 +44,8 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         if not created:
             return Response({"detail": "User already a member."}, status=status.HTTP_400_BAD_REQUEST)
         notify(workspace, user,f"You were added to {workspace.name} as {role}.",type=Notification.Type.MEMBER_INVITED)
-
         cache.delete(f"workspace_stats_{workspace.id}")
         log_activity(workspace, request.user, Activity.Action.MEMBER_INVITED, {"invited_email": email, "role": role})
-
         return Response(WorkspaceMemberSerializer(member).data, status=status.HTTP_201_CREATED)
         
     @action(detail=True, methods=["get"])
@@ -72,5 +64,4 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
             cache.set(cache_key, data, timeout=60)  # cache for 60 seconds
         else:
             data["cached"] = True
-
         return Response(data)
