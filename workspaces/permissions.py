@@ -1,8 +1,6 @@
 from rest_framework import permissions
+from rest_framework.exceptions import PermissionDenied
 from .models import WorkspaceMember
-from rest_framework import permissions
-from .models import WorkspaceMember
-
 
 WRITE_ROLES = {
     WorkspaceMember.Role.OWNER,
@@ -10,10 +8,34 @@ WRITE_ROLES = {
     WorkspaceMember.Role.EDITOR,
 }
 
-
 def get_role(user, workspace):
-    member = WorkspaceMember.objects.filter(workspace=workspace,user=user).first()
+    if not user or not user.is_authenticated:
+        return None
+    member = WorkspaceMember.objects.filter(workspace=workspace, user=user).first()
     return member.role if member else None
+
+def ensure_can_write(user, workspace):
+    role = get_role(user, workspace)
+    if role not in WRITE_ROLES:
+        raise PermissionDenied("Your role in this workspace is read-only.")
+
+class IsEditorOrReadOnly(permissions.BasePermission):
+    """Allows read-only access for any member, but write access only for OWNER, ADMIN, or EDITOR."""
+    message = "Your role in this workspace can't make changes."
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated)
+
+    def has_object_permission(self, request, view, obj):
+        workspace = view.workspace_of(obj) if hasattr(view, "workspace_of") else getattr(obj, "workspace", None)
+        if not workspace:
+            return False
+        
+        role = get_role(request.user, workspace)
+        if request.method in permissions.SAFE_METHODS:
+            return role is not None
+        return role in WRITE_ROLES
+
 
 class IsWorkspaceMember(permissions.BasePermission):
     """Any role can view; only members of the workspace get in at all."""
