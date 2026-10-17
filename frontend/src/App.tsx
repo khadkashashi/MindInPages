@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
 import Landing from "./pages/Landing";
@@ -11,10 +11,16 @@ import Tasks from "./pages/Tasks";
 import Flashcards from "./pages/Flashcards";
 import DeckDetail from "./pages/DeckDetail";
 import Study from "./pages/Study";
+import Members from "./pages/Members";
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedLayout() {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  return (
+    <WorkspaceProvider>
+      <Outlet />
+    </WorkspaceProvider>
+  );
 }
 
 function AppRoutes() {
@@ -23,79 +29,18 @@ function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <WorkspaceProvider>
-              <Dashboard />
-            </WorkspaceProvider>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/notes"
-        element={
-          <ProtectedRoute>
-            <WorkspaceProvider>
-              <Notes />
-            </WorkspaceProvider>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/notes/:id"
-        element={
-          <ProtectedRoute>
-            <WorkspaceProvider>
-              <NoteDetail />
-            </WorkspaceProvider>
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<ProtectedLayout />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/notes" element={<Notes />} />
+        <Route path="/notes/:id" element={<NoteDetail />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/flashcards" element={<Flashcards />} />
+        <Route path="/flashcards/:deckId" element={<DeckDetail />} />
+        <Route path="/flashcards/:deckId/study" element={<Study />} />
+        <Route path="/members" element={<Members />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" />} />
-            <Route
-        path="/tasks"
-        element={
-          <ProtectedRoute>
-            <WorkspaceProvider>
-              <Tasks />
-            </WorkspaceProvider>
-          </ProtectedRoute>
-        }
-      />
-            <Route
-        path="/flashcards"
-        element={
-          <ProtectedRoute>
-            <WorkspaceProvider>
-              <Flashcards />
-            </WorkspaceProvider>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/flashcards/:deckId"
-        element={
-          <ProtectedRoute>
-            <WorkspaceProvider>
-              <DeckDetail />
-            </WorkspaceProvider>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/flashcards/:deckId/study"
-        element={
-          <ProtectedRoute>
-            <WorkspaceProvider>
-              <Study />
-            </WorkspaceProvider>
-          </ProtectedRoute>
-        }
-      />
     </Routes>
-    
   );
 }
 

@@ -1,5 +1,11 @@
 import api from "./client";
 
+export interface TaskAssignee {
+  id: number;
+  email: string;
+  username: string;
+}
+
 export interface Task {
   id: number;
   workspace: number;
@@ -9,8 +15,8 @@ export interface Task {
   priority: "LOW" | "MEDIUM" | "HIGH";
   due_date: string | null;
   completed_at: string | null;
-  assigned_to: number | null;
-  assigned_to_email?: string;
+  assignees: number[];
+  assignee_details: TaskAssignee[];
   can_change_status: boolean;
   can_delete: boolean;
 }
@@ -25,11 +31,17 @@ export const createTask = (data: {
   title: string;
   priority?: string;
   due_date?: string | null;
-  assigned_to?: number | null;
+  assignees?: number[];
 }) => api.post<Task>("/tasks/", data);
 
-export const updateTask = (id: number, data: Partial<Task>) =>
-  api.patch<Task>(`/tasks/${id}/`, data);
+export const updateTask = (
+  id: number,
+  data: {
+    title?: string;
+    status?: Task["status"];
+    priority?: Task["priority"];
+    assignees?: number[];
+  }
+) => api.patch<Task>(`/tasks/${id}/`, data);
 
-export const deleteTask = (id: number) =>
-  api.delete(`/tasks/${id}/`);
+export const deleteTask = (id: number) => api.delete(`/tasks/${id}/`);
