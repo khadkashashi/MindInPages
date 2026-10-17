@@ -1,13 +1,7 @@
-export type WorkspaceRole =
-  | "OWNER"
-  | "ADMIN"
-  | "EDITOR"
-  | "VIEWER";
+export const normalizeRole = (role?: string | null) => (role ?? "").toUpperCase();
 
-export function canEditRole(role?: WorkspaceRole | null): boolean {
-  return (
-    role === "OWNER" ||
-    role === "ADMIN" ||
-    role === "EDITOR"
-  );
-}
+export const canEditRole = (role?: string | null) =>
+  ["OWNER", "ADMIN", "EDITOR"].includes(normalizeRole(role));
+
+export const canManageRole = (role?: string | null) =>
+  ["OWNER", "ADMIN"].includes(normalizeRole(role));

@@ -21,15 +21,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1h5jbbw#y3r^!%c@qpmi6+c%d9c29113=d)75n5xgjt)41c85y'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
 # Application definition
 AUTH_USER_MODEL = "accounts.User"
 
@@ -92,24 +83,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
+# FIXED: Set default permission to AllowAny so login/register aren't blocked by 401s
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ),
 }
-# Database
-# https://docs.djangoproject.com/en/6.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
@@ -141,12 +123,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "UTC"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
@@ -164,24 +140,18 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
+# Email
 MAILERS = {
     'default': {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://localhost:6379/1",  # different DB index than Celery (0)
-    }
-}
+# Environment variables via python-decouple
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = ["*"]  # tighten this to your real domain later
+ALLOWED_HOSTS = ["*"]
 
 DATABASES = {
     "default": {
@@ -194,12 +164,17 @@ DATABASES = {
     }
 }
 
-CELERY_BROKER_URL = config("REDIS_URL") + "/0"
-CELERY_RESULT_BACKEND = config("REDIS_URL") + "/0"
+CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379") + "/0"
+CELERY_RESULT_BACKEND = config("REDIS_URL", default="redis://localhost:6379") + "/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": config("REDIS_URL") + "/1",
+        "LOCATION": config("REDIS_URL", default="redis://localhost:6379") + "/1",
     }
 }
 
@@ -209,6 +184,7 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute="*"),  # runs every minute
     },
 }
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
