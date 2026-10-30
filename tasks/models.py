@@ -14,6 +14,10 @@ class Task(models.Model):
         MEDIUM = "MEDIUM", "Medium"
         HIGH = "HIGH", "High"
 
+    class CompletionMode(models.TextChoices):
+        SHARED = "SHARED", "Group: one result for everyone"
+        INDIVIDUAL = "INDIVIDUAL", "Each person completes their own"
+
     workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name="tasks")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
@@ -25,6 +29,16 @@ class Task(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    completion_mode = models.CharField(max_length=12, choices=CompletionMode.choices, default=CompletionMode.SHARED)
     def __str__(self):
         return self.title
+
+class TaskProgress(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="progress")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="task_progress")
+    status = models.CharField(max_length=15, choices=Task.Status.choices, default=Task.Status.TODO)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("task", "user")

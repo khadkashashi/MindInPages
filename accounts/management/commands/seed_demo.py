@@ -70,13 +70,14 @@ class Command(BaseCommand):
             workspace=workspace, created_by=teacher, assigned_to=student,
             title="Assignment 1: draw an ER diagram", priority=Task.Priority.HIGH,
             due_date=timezone.now() + timedelta(days=7),
+            completion_mode=Task.CompletionMode.INDIVIDUAL,
         )
         t2 = Task.objects.create(
             workspace=workspace, created_by=teacher, assigned_to=student,
             title="Read the SQL chapter", priority=Task.Priority.MEDIUM,
             due_date=timezone.now() + timedelta(days=3),
         )
-        t1.assignees.set([student, teacher])  
+        t1.assignees.set([student])
         t2.assignees.set([student])
         
         goal = Goal.objects.create(

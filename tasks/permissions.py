@@ -1,6 +1,7 @@
 from rest_framework import permissions
 from workspaces.permissions import WRITE_ROLES, get_role
 
+
 class TaskAccess(permissions.BasePermission):
     message = "Your role in this workspace can't change this task."
     def has_object_permission(self, request, view, task):
@@ -9,4 +10,4 @@ class TaskAccess(permissions.BasePermission):
             return False
         if request.method in permissions.SAFE_METHODS or role in WRITE_ROLES:
             return True
-        return request.method in ("PUT", "PATCH") and task.assignees.filter(pk=request.user.pk).exists()
+        return view.action in getattr(view, "member_actions", ())

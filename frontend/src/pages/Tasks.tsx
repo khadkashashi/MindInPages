@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
 import { useWorkspace } from "../context/WorkspaceContext";
 import {
-  listTasks, createTask, updateTask, deleteTask, type Task,
+  listTasks, createTask, updateTask, deleteTask, setTaskStatus,
+  type CompletionMode, type Task, type TaskStatus,
 } from "../api/tasks";
 import { apiError } from "../utils/errors";
 import AppLayout from "../components/AppLayout";
 import AssigneePicker from "../components/AssigneePicker";
 
-const statusLabels: Record<Task["status"], string> = {
+const statusLabels: Record<TaskStatus, string> = {
   TODO: "To Do",
   IN_PROGRESS: "In Progress",
   DONE: "Done",
+};
+
+const statusDot: Record<TaskStatus, string> = {
+  TODO: "bg-[#c9bba3]",
+  IN_PROGRESS: "bg-amber-400",
+  DONE: "bg-green-500",
 };
 
 const priorityColors: Record<Task["priority"], string> = {
@@ -19,19 +26,25 @@ const priorityColors: Record<Task["priority"], string> = {
   HIGH: "bg-red-100 text-red-700",
 };
 
-const nextStatus: Record<Task["status"], Task["status"]> = {
+const nextStatus: Record<TaskStatus, TaskStatus> = {
   TODO: "IN_PROGRESS",
   IN_PROGRESS: "DONE",
   DONE: "TODO",
 };
 
+const modeLabels: Record<CompletionMode, string> = {
+  INDIVIDUAL: "Each person completes their own",
+  SHARED: "Group: one result for everyone",
+};
+
 export default function Tasks() {
   const { currentWorkspace, canEdit } = useWorkspace();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [filter, setFilter] = useState<Task["status"] | "ALL">("ALL");
+  const [filter, setFilter] = useState<TaskStatus | "ALL">("ALL");
   const [mineOnly, setMineOnly] = useState(false);
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Task["priority"]>("MEDIUM");
+  const [mode, setMode] = useState<CompletionMode>("INDIVIDUAL");
   const [newAssignees, setNewAssignees] = useState<number[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
@@ -66,6 +79,7 @@ export default function Tasks() {
         workspace: currentWorkspace.id,
         title: title.trim(),
         priority,
+        completion_mode: mode,
         assignees: newAssignees,
       });
       setTitle("");
@@ -103,6 +117,14 @@ export default function Tasks() {
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
               <option value="HIGH">High</option>
+            </select>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value as CompletionMode)}
+              className="rounded-full border border-[#e3dbcb] bg-white px-4 py-2 text-sm text-[#3d342a] focus:outline-none"
+            >
+              <option value="INDIVIDUAL">{modeLabels.INDIVIDUAL}</option>
+              <option value="SHARED">{modeLabels.SHARED}</option>
             </select>
             <button
               onClick={handleCreate}
@@ -147,83 +169,133 @@ export default function Tasks() {
         <p className="text-[#9c8a6f]">No tasks here.</p>
       ) : (
         <ul className="space-y-3">
-          {tasks.map((t) => (
-            <li key={t.id} className="bg-white/70 border border-[#e3dbcb] rounded-xl px-5 py-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => guard(() => updateTask(t.id, { status: nextStatus[t.status] }))}
-                    disabled={!t.can_change_status}
-                    title={t.can_change_status ? "Click to change status" : "Only assignees and editors can change this"}
-                    className={`w-5 h-5 rounded-full border-2 flex-shrink-0 disabled:opacity-40 ${
-                      t.status === "DONE" ? "bg-[#3d342a] border-[#3d342a]" : "border-[#9c8a6f]"
-                    }`}
-                  />
-                  <div>
-                    <p
-                      className={`font-medium text-[#3d342a] ${
-                        t.status === "DONE" ? "line-through text-[#9c8a6f]" : ""
+          {tasks.map((t) => {
+            const individual = t.completion_mode === "INDIVIDUAL";
+            const mine = t.assignee_details.find((a) => a.is_me);
+            // an assignee's circle shows their own status; everyone else sees the overall one
+            const circleStatus: TaskStatus = individual && mine ? mine.status : t.status;
+            const circleEnabled = individual ? !!mine : t.can_change_status;
+            const badge =
+              individual && t.progress_summary
+                ? `${t.progress_summary.done}/${t.progress_summary.total} done`
+                : statusLabels[t.status];
+
+            return (
+              <li key={t.id} className="bg-white/70 border border-[#e3dbcb] rounded-xl px-5 py-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => guard(() => setTaskStatus(t.id, nextStatus[circleStatus]))}
+                      disabled={!circleEnabled}
+                      title={circleEnabled ? "Click to change status" : "Only assignees can change this"}
+                      className={`w-5 h-5 rounded-full border-2 flex-shrink-0 disabled:opacity-40 ${
+                        circleStatus === "DONE"
+                          ? "bg-[#3d342a] border-[#3d342a]"
+                          : circleStatus === "IN_PROGRESS"
+                          ? "bg-amber-300 border-amber-400"
+                          : "border-[#9c8a6f]"
                       }`}
-                    >
-                      {t.title}
-                    </p>
-                    {t.due_date && (
-                      <p className="text-xs text-[#9c8a6f]">
-                        Due {new Date(t.due_date).toLocaleDateString()}
+                    />
+                    <div>
+                      <p
+                        className={`font-medium text-[#3d342a] ${
+                          t.status === "DONE" ? "line-through text-[#9c8a6f]" : ""
+                        }`}
+                      >
+                        {t.title}
                       </p>
+                      <p className="text-xs text-[#9c8a6f]">
+                        {modeLabels[t.completion_mode]}
+                        {t.due_date && ` · Due ${new Date(t.due_date).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${priorityColors[t.priority]}`}>
+                      {t.priority}
+                    </span>
+                    <span className="text-xs px-2 py-1 rounded-full font-medium bg-[#ece4d4] text-[#6b5f50]">
+                      {badge}
+                    </span>
+                    {canEdit && (
+                      <button
+                        onClick={() => setEditingId(editingId === t.id ? null : t.id)}
+                        className="text-xs text-[#3d342a] hover:underline"
+                      >
+                        {editingId === t.id ? "Done" : "Assign"}
+                      </button>
+                    )}
+                    {t.can_delete && (
+                      <button
+                        onClick={() => guard(() => deleteTask(t.id))}
+                        className="text-xs text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${priorityColors[t.priority]}`}>
-                    {t.priority}
-                  </span>
-                  <span className="text-xs px-2 py-1 rounded-full font-medium bg-[#ece4d4] text-[#6b5f50]">
-                    {statusLabels[t.status]}
-                  </span>
-                  {canEdit && (
-                    <button
-                      onClick={() => setEditingId(editingId === t.id ? null : t.id)}
-                      className="text-xs text-[#3d342a] hover:underline"
-                    >
-                      {editingId === t.id ? "Done" : "Assign"}
-                    </button>
-                  )}
-                  {t.can_delete && (
-                    <button
-                      onClick={() => guard(() => deleteTask(t.id))}
-                      className="text-xs text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
 
-              {t.assignee_details.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-3 pl-8">
-                  {t.assignee_details.map((a) => (
-                    <span
-                      key={a.id}
-                      className="text-xs px-2 py-1 rounded-full bg-[#f5f1ea] border border-[#e3dbcb] text-[#6b5f50]"
-                    >
-                      {a.email}
-                    </span>
-                  ))}
-                </div>
-              )}
+                {t.assignee_details.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3 pl-8">
+                    {t.assignee_details.map((a) => {
+                      const clickable = individual && (canEdit || a.is_me);
+                      const chipClass =
+                        "inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-[#f5f1ea] border border-[#e3dbcb] text-[#6b5f50]";
+                      const content = (
+                        <>
+                          {individual && (
+                            <span className={`inline-block w-2 h-2 rounded-full ${statusDot[a.status]}`} />
+                          )}
+                          {a.email}
+                          {a.is_me && " (you)"}
+                          {individual && ` · ${statusLabels[a.status]}`}
+                        </>
+                      );
+                      return clickable ? (
+                        <button
+                          key={a.id}
+                          title={`Click to change ${a.is_me ? "your" : a.email + "'s"} status`}
+                          onClick={() =>
+                            guard(() =>
+                              setTaskStatus(t.id, nextStatus[a.status], a.is_me ? undefined : a.id)
+                            )
+                          }
+                          className={`${chipClass} hover:bg-[#ece4d4]`}
+                        >
+                          {content}
+                        </button>
+                      ) : (
+                        <span key={a.id} className={chipClass}>
+                          {content}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
 
-              {editingId === t.id && (
-                <div className="mt-3 pl-8">
-                  <AssigneePicker
-                    members={members}
-                    selected={t.assignees}
-                    onChange={(ids) => guard(() => updateTask(t.id, { assignees: ids }))}
-                  />
-                </div>
-              )}
-            </li>
-          ))}
+                {editingId === t.id && (
+                  <div className="mt-3 pl-8 space-y-3">
+                    <AssigneePicker
+                      members={members}
+                      selected={t.assignees}
+                      onChange={(ids) => guard(() => updateTask(t.id, { assignees: ids }))}
+                    />
+                    <select
+                      value={t.completion_mode}
+                      onChange={(e) =>
+                        guard(() => updateTask(t.id, { completion_mode: e.target.value as CompletionMode }))
+                      }
+                      className="rounded-full border border-[#e3dbcb] bg-white px-3 py-1 text-xs text-[#3d342a]"
+                    >
+                      <option value="INDIVIDUAL">{modeLabels.INDIVIDUAL}</option>
+                      <option value="SHARED">{modeLabels.SHARED}</option>
+                    </select>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </AppLayout>

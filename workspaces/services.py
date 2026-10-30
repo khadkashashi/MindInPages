@@ -98,8 +98,9 @@ def accept_pending_invitations(user):
 
 @transaction.atomic
 def remove_member(workspace, member):
+    from tasks.services import unassign_user
     user = member.user
-    for task in user.tasks_assigned.filter(workspace=workspace):
-        task.assignees.remove(user)
+    for task in list(user.tasks_assigned.filter(workspace=workspace)):
+        unassign_user(task, user)
     member.delete()
     _clear_stats_cache(workspace)
