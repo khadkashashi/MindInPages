@@ -1,10 +1,8 @@
 from datetime import timedelta
-
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
-
 from flashcards.models import Deck, Flashcard
 from goals.models import Goal
 from notes.models import Note
@@ -13,8 +11,6 @@ from tasks.models import Task
 from workspaces.models import Workspace, WorkspaceMember
 
 PASSWORD = "demo12345"  # local demo accounts only, never use this on a deployed site
-
-
 class Command(BaseCommand):
     help = "Create a demo classroom: teacher, student, notes, deck, tasks and a goal. Safe to run twice."
 
@@ -80,6 +76,9 @@ class Command(BaseCommand):
             title="Read the SQL chapter", priority=Task.Priority.MEDIUM,
             due_date=timezone.now() + timedelta(days=3),
         )
+        t1.assignees.set([student, teacher])  
+        t2.assignees.set([student])
+        
         goal = Goal.objects.create(
             workspace=workspace, created_by=teacher, title="Finish the DBMS module",
             target_date=(timezone.now() + timedelta(days=30)).date(),

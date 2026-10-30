@@ -19,7 +19,7 @@ class Task(models.Model):
     description = models.TextField(blank=True)
     status = models.CharField(max_length=15, choices=Status.choices, default=Status.TODO)
     priority = models.CharField(max_length=10, choices=Priority.choices, default=Priority.MEDIUM)
-    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_tasks")
+    assignees = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="tasks_assigned")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="created_tasks")
     due_date = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)

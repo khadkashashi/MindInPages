@@ -28,3 +28,17 @@ class WorkspaceMember(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.workspace} ({self.role})"
+
+class WorkspaceInvitation(models.Model):
+    """For people without an account yet. Accepted automatically when they register."""
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name="invitations")
+    email = models.EmailField()
+    role = models.CharField(max_length=10, choices=WorkspaceMember.Role.choices, default=WorkspaceMember.Role.VIEWER)
+    invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,related_name="sent_invitations")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("workspace", "email")
+
+    def __str__(self):
+        return f"{self.email} -> {self.workspace} ({self.role})"

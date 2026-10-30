@@ -5,6 +5,8 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from analytics.models import Activity
 from analytics.services import log_activity
 from goals.services import recalculate_progress
+from notifications.models import Notification
+from notifications.services import notify
 from workspaces.models import Workspace
 from workspaces.permissions import WRITE_ROLES, ensure_can_write, get_role
 from .models import Task
@@ -26,15 +28,21 @@ class TaskViewSet(viewsets.ModelViewSet):
         if params.get("priority"):
             qs = qs.filter(priority=params["priority"])
         if params.get("mine") == "true":
-            qs = qs.filter(assigned_to=self.request.user)
+            qs = qs.filter(assignees=self.request.user)
         if params.get("overdue") == "true":
             qs = qs.filter(due_date__lt=timezone.now()).exclude(status=Task.Status.DONE)
-        return qs.order_by("-created_at")
+        return qs.prefetch_related("assignees").order_by("-created_at")
 
-    def _check_assignee(self, workspace, data):
-        assignee = data.get("assigned_to")
-        if assignee and not workspace.members.filter(user=assignee).exists():
-            raise ValidationError({"assigned_to": "That user is not a member of this workspace."})
+    def _check_assignees(self, workspace, data):
+        member_ids = set(workspace.members.values_list("user_id", flat=True))
+        outsiders = [u.email for u in data.get("assignees", []) if u.id not in member_ids]
+        if outsiders:
+            raise ValidationError({"assignees": f"Not members of this workspace: {', '.join(outsiders)}"})
+
+    def _notify_new_assignees(self, task, before_ids):
+        me = self.request.user
+        for user in task.assignees.exclude(pk__in=before_ids).exclude(pk=me.pk):
+            notify(task.workspace, user, f'{me.email} assigned you "{task.title}".',type=Notification.Type.TASK_ASSIGNED)
 
     @staticmethod
     def _stamp_completion(task):
@@ -47,26 +55,25 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        workspace = get_object_or_404(
-            Workspace, id=self.request.data.get("workspace"), members__user=user
-        )
+        workspace = get_object_or_404(Workspace, id=self.request.data.get("workspace"), members__user=user)
         ensure_can_write(user, workspace)
-        self._check_assignee(workspace, serializer.validated_data)
+        self._check_assignees(workspace, serializer.validated_data)
         task = serializer.save(workspace=workspace, created_by=user)
         self._stamp_completion(task)
-        log_activity(
-            workspace, user, Activity.Action.TASK_CREATED, {"task_id": task.id, "title": task.title}
-        )
+        self._notify_new_assignees(task, before_ids=set())
+        log_activity(workspace, user, Activity.Action.TASK_CREATED, {"task_id": task.id, "title": task.title})
 
     def perform_update(self, serializer):
         user = self.request.user
         task = serializer.instance
+        before = set(task.assignees.values_list("pk", flat=True))
         if get_role(user, task.workspace) in WRITE_ROLES:
-            self._check_assignee(task.workspace, serializer.validated_data)
+            self._check_assignees(task.workspace, serializer.validated_data)
         elif not set(serializer.validated_data) <= {"status"}:
             raise PermissionDenied("Assignees can only change the status of their task.")
         task = serializer.save()
         self._stamp_completion(task)
+        self._notify_new_assignees(task, before)
         for goal in task.goals.all():
             recalculate_progress(goal)
 
